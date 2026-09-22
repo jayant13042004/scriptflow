@@ -185,7 +185,7 @@ export function DrawingNode(props: NodeViewProps) {
     }
   };
 
-  // Convert to Text via Gemini AI and replace this block
+  // Convert to Text via our AI and replace this block
   const handleConvertToText = async () => {
     const sourceData = dataUrl || (canvasRef.current ? canvasRef.current.toDataURL('image/png') : '');
     if (!sourceData) return;

@@ -6,8 +6,9 @@ import { isSupabaseConfigured } from '../services/supabase/client';
 
 const localStorage = new LocalStorageService();
 
-// Helper: pick the right backend
-const useSupabase = () => isSupabaseConfigured();
+// Helper: pick the right backend (use local storage for test/guest mode)
+const isGuestOrLocal = (userId?: string) => !userId || userId === 'test-creator-guest' || userId === 'local-user';
+const useSupabase = (userId?: string) => isSupabaseConfigured() && !isGuestOrLocal(userId);
 
 interface ScriptState {
   scripts: Script[];
@@ -68,26 +69,46 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   loadScripts: async (userId) => {
     set({ isLoading: true });
     try {
-      const scripts = useSupabase()
-        ? await supabaseStorage.getScripts(userId)
-        : localStorage.getScripts();
+      let scripts: Script[] = [];
+      if (useSupabase(userId)) {
+        try {
+          scripts = await supabaseStorage.getScripts(userId);
+        } catch (e) {
+          console.warn('Supabase getScripts failed, falling back to localStorage:', e);
+          scripts = localStorage.getScripts();
+        }
+      } else {
+        scripts = localStorage.getScripts();
+      }
       set({ scripts, isLoading: false });
     } catch (e) {
       console.error('loadScripts error:', e);
-      set({ isLoading: false });
+      set({ scripts: localStorage.getScripts(), isLoading: false });
     }
   },
 
   createScript: async (userId, title = 'Untitled Script', folderId = null, playlistId = null) => {
     let newScript: Script;
-    if (useSupabase()) {
-      newScript = await supabaseStorage.createScript(userId, {
-        title,
-        folderId,
-        playlistId,
-        content: null,
-        plainText: '',
-      });
+    if (useSupabase(userId)) {
+      try {
+        newScript = await supabaseStorage.createScript(userId, {
+          title,
+          folderId,
+          playlistId,
+          content: null,
+          plainText: '',
+        });
+      } catch (e) {
+        console.warn('Supabase createScript failed, falling back to localStorage:', e);
+        newScript = localStorage.createScript({
+          title,
+          folderId,
+          playlistId,
+          content: null,
+          plainText: '',
+          userId,
+        });
+      }
     } else {
       newScript = localStorage.createScript({
         title,
@@ -103,8 +124,15 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   },
 
   updateScript: async (id, updates) => {
-    if (useSupabase()) {
-      await supabaseStorage.updateScript(id, updates);
+    const { currentScript } = get();
+    const userId = currentScript?.userId;
+    if (useSupabase(userId)) {
+      try {
+        await supabaseStorage.updateScript(id, updates);
+      } catch (e) {
+        console.warn('Supabase updateScript fallback to localStorage:', e);
+        localStorage.updateScript(id, updates);
+      }
     } else {
       localStorage.updateScript(id, updates);
     }
@@ -118,8 +146,15 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   },
 
   deleteScript: async (id) => {
-    if (useSupabase()) {
-      await supabaseStorage.deleteScript(id);
+    const { currentScript } = get();
+    const userId = currentScript?.userId;
+    if (useSupabase(userId)) {
+      try {
+        await supabaseStorage.deleteScript(id);
+      } catch (e) {
+        console.warn('Supabase deleteScript fallback to localStorage:', e);
+        localStorage.deleteScript(id);
+      }
     } else {
       localStorage.deleteScript(id);
     }
@@ -130,16 +165,31 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   },
 
   duplicateScript: async (userId, id) => {
-    const original = useSupabase()
-      ? await supabaseStorage.getScript(id)
-      : localStorage.getScript(id);
+    let original: Script | null = null;
+    if (useSupabase(userId)) {
+      try {
+        original = await supabaseStorage.getScript(id);
+      } catch {
+        original = localStorage.getScript(id);
+      }
+    } else {
+      original = localStorage.getScript(id);
+    }
     const title = original ? `${original.title} (Copy)` : 'Untitled Script (Copy)';
     let dup: Script;
-    if (useSupabase()) {
-      dup = await supabaseStorage.createScript(userId, {
-        ...original,
-        title,
-      });
+    if (useSupabase(userId)) {
+      try {
+        dup = await supabaseStorage.createScript(userId, {
+          ...original,
+          title,
+        });
+      } catch {
+        dup = localStorage.createScript({
+          ...original,
+          title,
+          userId,
+        });
+      }
     } else {
       dup = localStorage.createScript({
         ...original,
@@ -154,9 +204,19 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   setCurrentScript: (script) => set({ currentScript: script }),
 
   loadScript: async (id) => {
-    const script = useSupabase()
-      ? await supabaseStorage.getScript(id)
-      : localStorage.getScript(id);
+    let script: Script | null = null;
+    if (isSupabaseConfigured()) {
+      try {
+        script = await supabaseStorage.getScript(id);
+      } catch {
+        script = localStorage.getScript(id);
+      }
+    } else {
+      script = localStorage.getScript(id);
+    }
+    if (!script) {
+      script = localStorage.getScript(id);
+    }
     if (script) {
       set({ currentScript: script });
     }
@@ -167,19 +227,31 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
 
   loadFolders: async (userId) => {
     try {
-      const folders = useSupabase()
-        ? await supabaseStorage.getFolders(userId)
-        : localStorage.getFolders();
+      let folders: Folder[] = [];
+      if (useSupabase(userId)) {
+        try {
+          folders = await supabaseStorage.getFolders(userId);
+        } catch {
+          folders = localStorage.getFolders();
+        }
+      } else {
+        folders = localStorage.getFolders();
+      }
       set({ folders });
     } catch (e) {
       console.error('loadFolders error:', e);
+      set({ folders: localStorage.getFolders() });
     }
   },
 
   createFolder: async (userId, name, color) => {
     let folder: Folder;
-    if (useSupabase()) {
-      folder = await supabaseStorage.createFolder(userId, name, color);
+    if (useSupabase(userId)) {
+      try {
+        folder = await supabaseStorage.createFolder(userId, name, color);
+      } catch {
+        folder = localStorage.createFolder(name, color);
+      }
     } else {
       folder = localStorage.createFolder(name, color);
     }
@@ -188,8 +260,12 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
 
   updateFolder: async (id, updates) => {
     let updated: Folder | null = null;
-    if (useSupabase()) {
-      updated = await supabaseStorage.updateFolder(id, updates);
+    if (isSupabaseConfigured()) {
+      try {
+        updated = await supabaseStorage.updateFolder(id, updates);
+      } catch {
+        updated = localStorage.updateFolder(id, updates);
+      }
     } else {
       updated = localStorage.updateFolder(id, updates);
     }
@@ -201,8 +277,12 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   },
 
   deleteFolder: async (id) => {
-    if (useSupabase()) {
-      await supabaseStorage.deleteFolder(id);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabaseStorage.deleteFolder(id);
+      } catch {
+        localStorage.deleteFolder(id);
+      }
     } else {
       localStorage.deleteFolder(id);
     }
@@ -256,18 +336,39 @@ export const useScriptStore = create<ScriptState>((set, get) => ({
   // ── Versions ────────────────────────────────────────────────────────────────
 
   getVersions: async (scriptId) => {
-    return useSupabase()
-      ? await supabaseStorage.getVersions(scriptId)
-      : localStorage.getVersions(scriptId);
+    try {
+      if (isSupabaseConfigured()) {
+        try {
+          return await supabaseStorage.getVersions(scriptId);
+        } catch {
+          return localStorage.getVersions(scriptId);
+        }
+      }
+      return localStorage.getVersions(scriptId);
+    } catch {
+      return localStorage.getVersions(scriptId);
+    }
   },
 
   createVersion: async (scriptId) => {
-    const script = useSupabase()
-      ? await supabaseStorage.getScript(scriptId)
-      : localStorage.getScript(scriptId);
+    let script: Script | null = null;
+    if (isSupabaseConfigured()) {
+      try {
+        script = await supabaseStorage.getScript(scriptId);
+      } catch {
+        script = localStorage.getScript(scriptId);
+      }
+    } else {
+      script = localStorage.getScript(scriptId);
+    }
     if (!script) return;
-    if (useSupabase()) {
-      await supabaseStorage.createVersion(scriptId, script.content, script.plainText, script.wordCount ?? 0);
+    if (isSupabaseConfigured()) {
+      try {
+        await supabaseStorage.createVersion(scriptId, script.content, script.plainText, script.wordCount ?? 0);
+        return;
+      } catch {
+        localStorage.createVersion(scriptId, script.content, script.plainText, script.wordCount ?? 0);
+      }
     } else {
       localStorage.createVersion(scriptId, script.content, script.plainText, script.wordCount ?? 0);
     }

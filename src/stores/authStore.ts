@@ -16,14 +16,21 @@ interface AuthState {
   login: (email: string, password: string) => Promise<void>;
   signup: (email: string, password: string, displayName: string) => Promise<void>;
   loginWithGoogle: () => Promise<void>;
+  loginAsGuest: () => void;
   logout: () => Promise<void>;
   initAuth: () => void;
 }
 
+const DEFAULT_GUEST_USER: User = {
+  id: 'test-creator-guest',
+  email: 'creator@scriptflow.test',
+  displayName: 'Test Creator',
+};
+
 export const useAuthStore = create<AuthState>((set) => ({
-  user: null,
-  isAuthenticated: false,
-  isLoading: true,
+  user: DEFAULT_GUEST_USER,
+  isAuthenticated: true,
+  isLoading: false,
 
   login: async (email, password) => {
     const { user, error } = await signIn(email, password);
@@ -50,32 +57,43 @@ export const useAuthStore = create<AuthState>((set) => ({
     if (error) {
       throw new Error(error.message || 'Google sign-in failed');
     }
-    // For real Supabase OAuth, the browser redirects to Google —
-    // the auth state will be picked up by onAuthStateChange after redirect.
+  },
+
+  loginAsGuest: () => {
+    set({
+      user: DEFAULT_GUEST_USER,
+      isAuthenticated: true,
+      isLoading: false,
+    });
   },
 
   logout: async () => {
     await signOut();
+    // In testing mode, keep a clean state or allow re-entry
     set({ user: null, isAuthenticated: false });
   },
 
   initAuth: () => {
-    // First, check for an existing session
+    // Check for an existing session
     getCurrentUser().then((user) => {
+      // In testing mode without sign-in, default to guest if no session
+      const activeUser = user || DEFAULT_GUEST_USER;
       set({
-        user,
-        isAuthenticated: !!user,
+        user: activeUser,
+        isAuthenticated: true,
         isLoading: false,
       });
     });
 
-    // Then, listen for auth state changes (handles OAuth callbacks, tab focus, etc.)
+    // Listen for auth state changes
     onAuthStateChange((user) => {
-      set({
-        user,
-        isAuthenticated: !!user,
-        isLoading: false,
-      });
+      if (user) {
+        set({
+          user,
+          isAuthenticated: true,
+          isLoading: false,
+        });
+      }
     });
   },
 }));

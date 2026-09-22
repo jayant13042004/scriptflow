@@ -12,7 +12,6 @@ import { useEditorStore } from '../../stores/editorStore';
 
 interface EditorToolbarProps {
   editor: Editor | null;
-  onOpenHandwriting?: () => void;
 }
 
 const HIGHLIGHT_COLORS = [
@@ -35,7 +34,7 @@ const FONT_SIZES = [
   { label: '32px', value: '32px', name: 'Title' },
 ];
 
-export function EditorToolbar({ editor, onOpenHandwriting }: EditorToolbarProps) {
+export function EditorToolbar({ editor }: EditorToolbarProps) {
   const showFindReplace = useEditorStore(state => state.showFindReplace);
   const toggleFindReplace = useEditorStore(state => state.toggleFindReplace);
 
@@ -334,7 +333,7 @@ export function EditorToolbar({ editor, onOpenHandwriting }: EditorToolbarProps)
 
       <Separator />
 
-      {/* 1. Insert Inline Drawing / Handwriting directly into Script */}
+      {/* Insert Inline Drawing / Handwriting directly into Script */}
       <button
         type="button"
         onClick={() => {
@@ -346,15 +345,6 @@ export function EditorToolbar({ editor, onOpenHandwriting }: EditorToolbarProps)
         <PenTool className="w-3.5 h-3.5" />
         <span className="hidden sm:inline">Handwrite in Script</span>
       </button>
-
-      {/* 2. Standalone Handwriting Pad Modal */}
-      {onOpenHandwriting && (
-        <ToolbarButton
-          onClick={onOpenHandwriting}
-          icon={PenTool}
-          title="Open Standalone Handwriting Pad"
-        />
-      )}
     </div>
   );
 }

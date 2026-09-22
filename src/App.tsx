@@ -17,7 +17,7 @@ import EditorPage from './pages/EditorPage';
 import { ToastContainer } from './components/ui/Toast';
 
 function ProtectedRoute({ children }: { children: React.ReactNode }) {
-  const { isAuthenticated, isLoading } = useAuthStore();
+  const { isAuthenticated, isLoading, loginAsGuest } = useAuthStore();
 
   if (isLoading) {
     return (
@@ -27,8 +27,9 @@ function ProtectedRoute({ children }: { children: React.ReactNode }) {
     );
   }
 
+  // Testing mode: automatically grant guest access if not signed in
   if (!isAuthenticated) {
-    return <Navigate to="/login" replace />;
+    loginAsGuest();
   }
 
   return <>{children}</>;

@@ -109,7 +109,7 @@ export function VideoIdeasModal({
               Analyzing your {eligibleScripts.length} scripts & generating viral video ideas...
             </h4>
             <p className="text-xs text-gray-400">
-              Gemini is finding high-retention angles tailored specifically to your audience.
+              Our AI is finding high-retention angles tailored specifically to your audience.
             </p>
           </div>
         ) : data && data.ideas.length > 0 ? (

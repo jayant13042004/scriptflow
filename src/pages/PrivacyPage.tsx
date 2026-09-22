@@ -71,7 +71,7 @@ export default function PrivacyPage() {
                 <strong>Script & Creator Content:</strong> Scripts, folders, version history, custom hooks, and production notes stored in your account.
               </li>
               <li>
-                <strong>AI Interaction Data:</strong> When you trigger an AI text improvement or generation, the selected script text and instructions are securely transmitted to the underlying LLM provider (Google Gemini API) to generate the response.
+                <strong>AI Interaction Data:</strong> When you trigger an AI text improvement or generation, the selected script text and instructions are securely processed by our AI infrastructure to generate the response.
               </li>
             </ul>
           </section>
@@ -79,7 +79,7 @@ export default function PrivacyPage() {
           <section className="space-y-3">
             <h2 className="text-lg font-bold font-sans text-gray-900">3. AI Data Handling & Model Training</h2>
             <p>
-              We prioritize data integrity. Enterprise API integrations with Google Gemini do not use your private script prompts or video concepts to train general foundation models. Your creative ideas remain confidential.
+              We prioritize data integrity. Our AI processing infrastructure does not use your private script prompts or video concepts to train public foundation models. Your creative ideas remain strictly confidential.
             </p>
           </section>
 

@@ -136,8 +136,8 @@ export const VoiceScriptModal: React.FC<VoiceScriptModalProps> = ({
     }
   };
 
-  // Option 1: Structure with Gemini (Keeps exact words, only formats into clean readable structure)
-  const handleStructureWithGemini = async () => {
+  // Option 1: Structure with AI (Keeps exact words, only formats into clean readable structure)
+  const handleStructureWithAi = async () => {
     if (!transcript.trim()) return;
     setIsProcessing(true);
     setProcessType('structure');
@@ -161,8 +161,8 @@ export const VoiceScriptModal: React.FC<VoiceScriptModalProps> = ({
     }
   };
 
-  // Option 2: Convert to Script with Gemini (Polishes, rewrites, and crafts into a high-retention video script)
-  const handleConvertWithGemini = async () => {
+  // Option 2: Convert to Script with AI (Polishes, rewrites, and crafts into a high-retention video script)
+  const handleConvertWithAi = async () => {
     if (!transcript.trim()) return;
     setIsProcessing(true);
     setProcessType('convert');
@@ -355,10 +355,10 @@ export const VoiceScriptModal: React.FC<VoiceScriptModalProps> = ({
 
         {/* AI Action Options */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-1">
-          {/* Option 1: Structure with Gemini */}
+          {/* Option 1: Structure with AI */}
           <button
             type="button"
-            onClick={handleStructureWithGemini}
+            onClick={handleStructureWithAi}
             disabled={!transcript.trim() || isProcessing}
             className={`p-3 text-left rounded-xl border transition-all ${
               activeTab === 'structured'
@@ -368,17 +368,17 @@ export const VoiceScriptModal: React.FC<VoiceScriptModalProps> = ({
           >
             <div className="flex items-center gap-2 font-bold text-xs text-purple-900 mb-1">
               <Sparkles className="w-4 h-4 text-purple-600" />
-              <span>Structure with Gemini</span>
+              <span>Structure with AI</span>
             </div>
             <p className="text-[11px] text-purple-700 leading-snug">
               Cleans punctuation, headers & format <strong>without changing your words</strong>.
             </p>
           </button>
 
-          {/* Option 2: Convert to Script with Gemini */}
+          {/* Option 2: Convert to Script with AI */}
           <button
             type="button"
-            onClick={handleConvertWithGemini}
+            onClick={handleConvertWithAi}
             disabled={!transcript.trim() || isProcessing}
             className={`p-3 text-left rounded-xl border transition-all ${
               activeTab === 'converted'
@@ -388,7 +388,7 @@ export const VoiceScriptModal: React.FC<VoiceScriptModalProps> = ({
           >
             <div className="flex items-center gap-2 font-bold text-xs text-emerald-900 mb-1">
               <Flame className="w-4 h-4 text-emerald-600" />
-              <span>Convert to Script with Gemini</span>
+              <span>Convert to Script with AI</span>
             </div>
             <p className="text-[11px] text-emerald-700 leading-snug">
               Transforms rambling thoughts into a polished, high-converting video script.

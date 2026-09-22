@@ -87,7 +87,7 @@ export function ScriptEditor({ initialContent, onUpdate }: ScriptEditorProps) {
           onClose={toggleFindReplace} 
         />
         
-        <div className="max-w-[720px] mx-auto w-full px-8 py-12">
+        <div className="w-full px-6 sm:px-10 py-12">
           <EditorContent editor={editor} />
         </div>
       </div>

@@ -40,7 +40,6 @@ import { YoutubeMetadataModal } from '../components/studio/YoutubeMetadataModal'
 import { SponsorBlockModal } from '../components/studio/SponsorBlockModal';
 import { ScriptTranslatorModal } from '../components/studio/ScriptTranslatorModal';
 import { ShortExtractorModal } from '../components/studio/ShortExtractorModal';
-import { HandwritingModal } from '../components/studio/HandwritingModal';
 import { StudioToolsDropdown } from '../components/studio/StudioToolsDropdown';
 import { AddToPlaylistModal } from '../components/playlist/AddToPlaylistModal';
 import { exportToPdf, downloadFile } from '../lib/exportImport';
@@ -58,6 +57,7 @@ import type { ProductionSection, ScriptSection } from '../types';
 import type { AiGenerateResponse } from '../types/ai';
 
 type PanelType = 'ai' | 'hooks' | 'planner' | 'structure' | 'repurpose';
+type ContentWidth = 'standard' | 'wide' | 'full';
 
 const panelButtons: { id: PanelType; icon: React.ElementType; label: string }[] = [
   { id: 'ai', icon: Sparkles, label: 'AI Assistant' },
@@ -100,7 +100,6 @@ export default function EditorPage() {
   const [showSponsorModal, setShowSponsorModal] = useState(false);
   const [showTranslatorModal, setShowTranslatorModal] = useState(false);
   const [showShortExtractorModal, setShowShortExtractorModal] = useState(false);
-  const [showHandwritingModal, setShowHandwritingModal] = useState(false);
   const [showAddToPlaylistModal, setShowAddToPlaylistModal] = useState(false);
   const [showVersions, setShowVersions] = useState(false);
   const [showMenu, setShowMenu] = useState(false);
@@ -115,6 +114,30 @@ export default function EditorPage() {
     return saved ? Math.max(320, Math.min(850, Number(saved))) : 420;
   });
   const [isResizing, setIsResizing] = useState(false);
+
+  // Canvas / Content width mode
+  // 'full': Whole width (100% fluid, zero artificial empty space on left/right)
+  // 'wide': Wide canvas (1200px max, centered)
+  // 'standard': Standard focus (800px max, centered)
+  const [contentWidth, setContentWidth] = useState<ContentWidth>(() => {
+    const saved = localStorage.getItem('scriptflow_editor_width_v2');
+    if (saved === 'standard' || saved === 'wide' || saved === 'full') return saved as ContentWidth;
+    return 'full'; // Default to Whole Width so text fills the entire screen width
+  });
+
+  const handleSetWidth = (w: ContentWidth) => {
+    setContentWidth(w);
+    localStorage.setItem('scriptflow_editor_width_v2', w);
+  };
+
+  const cycleContentWidth = () => {
+    const next: Record<ContentWidth, ContentWidth> = {
+      full: 'wide',
+      wide: 'standard',
+      standard: 'full',
+    };
+    handleSetWidth(next[contentWidth]);
+  };
 
   const startResizing = useCallback((mouseDownEvent: React.MouseEvent) => {
     mouseDownEvent.preventDefault();
@@ -379,7 +402,7 @@ export default function EditorPage() {
       <header className="bg-white border-b border-gray-200 sticky top-0 z-40 no-print">
         <div className="px-4 h-14 flex items-center justify-between gap-4 relative z-30">
           {/* Left */}
-          <div className="flex items-center gap-3 min-w-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0">
             <button
               onClick={async () => {
                 const text = editor ? editor.getText().trim() : '';
@@ -391,11 +414,15 @@ export default function EditorPage() {
                 }
                 navigate('/dashboard');
               }}
-              className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0"
+              className="flex items-center gap-1.5 p-1.5 -ml-1 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex-shrink-0 group"
               title="Back to Dashboard"
             >
-              <ArrowLeft className="w-4 h-4" />
+              <ArrowLeft className="w-4 h-4 text-gray-400 group-hover:text-gray-700 transition-colors" />
+              <div className="w-7 h-7 bg-gray-900 rounded-lg flex items-center justify-center shadow-xs">
+                <PenLine className="w-3.5 h-3.5 text-white" />
+              </div>
             </button>
+            <div className="h-5 w-px bg-gray-200 shrink-0 hidden sm:block" />
             <input
               type="text"
               value={title}
@@ -487,7 +514,6 @@ export default function EditorPage() {
               onOpenSponsorBlock={() => setShowSponsorModal(true)}
               onOpenTranslator={() => setShowTranslatorModal(true)}
               onOpenShortExtractor={() => setShowShortExtractorModal(true)}
-              onOpenHandwriting={() => setShowHandwritingModal(true)}
               onInsertInlineDrawing={() => (editor?.chain().focus() as any).insertDrawing().run()}
               onOpenPlaylistModal={() => setShowAddToPlaylistModal(true)}
               onOpenShareModal={() => setShowShareModal(true)}
@@ -515,6 +541,18 @@ export default function EditorPage() {
             </div>
 
             <div className="border-l border-gray-200 ml-1 pl-1 flex items-center gap-0.5">
+              {/* Canvas Width Cycle Button */}
+              <button
+                onClick={cycleContentWidth}
+                className="p-2 text-gray-500 hover:text-gray-900 hover:bg-gray-100 rounded-lg transition-colors flex items-center gap-1.5"
+                title={`Canvas Width: ${contentWidth === 'full' ? 'Whole Width (100%)' : contentWidth === 'wide' ? 'Wide (1200px)' : 'Standard (800px)'} (Click to toggle)`}
+              >
+                <Layout className="w-4 h-4 text-gray-500" />
+                <span className="text-[11px] font-bold uppercase text-gray-600 hidden xl:inline">
+                  {contentWidth === 'full' ? 'Whole Width' : contentWidth === 'wide' ? 'Wide' : 'Standard'}
+                </span>
+              </button>
+
               <button
                 onClick={handleToggleFullscreen}
                 className="p-2 text-gray-400 hover:text-gray-600 hover:bg-gray-100 rounded-lg transition-colors"
@@ -535,7 +573,38 @@ export default function EditorPage() {
                 {showMenu && (
                   <>
                     <div className="fixed inset-0 z-10" onClick={() => setShowMenu(false)} />
-                    <div className="absolute right-0 top-8 z-20 w-48 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-scale-in">
+                    <div className="absolute right-0 top-8 z-20 w-52 bg-white border border-gray-200 rounded-lg shadow-lg py-1 animate-scale-in">
+                      {/* Canvas Width Selection */}
+                      <div className="px-3 py-1.5 text-[10px] font-semibold text-gray-400 uppercase tracking-wider">Canvas Width</div>
+                      <button
+                        onClick={() => { handleSetWidth('full'); setShowMenu(false); }}
+                        className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          contentWidth === 'full' ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span>Whole Width (100% Fluid)</span>
+                        {contentWidth === 'full' && <span className="text-blue-600 font-bold">✓</span>}
+                      </button>
+                      <button
+                        onClick={() => { handleSetWidth('wide'); setShowMenu(false); }}
+                        className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          contentWidth === 'wide' ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span>Wide (1200px)</span>
+                        {contentWidth === 'wide' && <span className="text-blue-600 font-bold">✓</span>}
+                      </button>
+                      <button
+                        onClick={() => { handleSetWidth('standard'); setShowMenu(false); }}
+                        className={`w-full px-3 py-1.5 text-left text-xs flex items-center justify-between transition-colors ${
+                          contentWidth === 'standard' ? 'text-blue-600 font-semibold bg-blue-50' : 'text-gray-700 hover:bg-gray-50'
+                        }`}
+                      >
+                        <span>Standard (800px)</span>
+                        {contentWidth === 'standard' && <span className="text-blue-600 font-bold">✓</span>}
+                      </button>
+                      <div className="border-t border-gray-100 my-1" />
+
                       <button
                         onClick={() => {
                           setShowAnalyticsModal(true);
@@ -584,7 +653,6 @@ export default function EditorPage() {
         {/* Editor Toolbar */}
         <EditorToolbar
           editor={editor}
-          onOpenHandwriting={() => setShowHandwritingModal(true)}
         />
       </header>
 
@@ -601,7 +669,13 @@ export default function EditorPage() {
       <div className="flex">
         {/* Editor */}
         <div className={`flex-1 transition-all duration-300 ${activePanel ? 'mr-0' : ''}`}>
-          <div className="max-w-[720px] mx-auto px-6 sm:px-10 lg:px-16 pb-32">
+          <div className={`${
+            contentWidth === 'standard'
+              ? 'max-w-3xl mx-auto px-6 sm:px-8'
+              : contentWidth === 'wide'
+              ? 'max-w-6xl mx-auto px-6 sm:px-10'
+              : 'w-full px-6 sm:px-10 lg:px-12'
+          } pb-32 pt-6 sm:pt-8 transition-all duration-150`}>
             <EditorContent editor={editor} />
           </div>
         </div>
@@ -908,19 +982,7 @@ export default function EditorPage() {
         }}
       />
 
-      {/* 6. Handwriting & Sketch Pad Modal (Write with Pen) */}
-      <HandwritingModal
-        isOpen={showHandwritingModal}
-        onClose={() => setShowHandwritingModal(false)}
-        onInsertText={(text) => {
-          if (editor) {
-            editor.commands.insertContent(text.replace(/\n\n/g, '</p><p>').replace(/\n/g, '<br>'));
-            setIsDirty(true);
-          }
-        }}
-      />
-
-      {/* 7. Add / Manage Series & Playlist Modal */}
+      {/* 6. Add / Manage Series & Playlist Modal */}
       <AddToPlaylistModal
         isOpen={showAddToPlaylistModal}
         onClose={() => setShowAddToPlaylistModal(false)}

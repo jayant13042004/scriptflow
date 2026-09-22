@@ -10,7 +10,7 @@ export default function SignupPage() {
     description: 'Join thousands of YouTube creators and podcasters using ScriptFlow to write, refine, and produce better video scripts.',
   });
   const navigate = useNavigate();
-  const { signup, loginWithGoogle } = useAuthStore();
+  const { signup, loginWithGoogle, loginAsGuest } = useAuthStore();
   const [displayName, setDisplayName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -168,6 +168,26 @@ export default function SignupPage() {
             )}
           </button>
         </form>
+
+        {/* Testing Mode Shortcut */}
+        <div className="mt-6 p-4 bg-blue-50/80 border border-blue-100 rounded-xl text-center">
+          <p className="text-xs font-semibold text-blue-900 mb-1">
+            Testing Mode Active
+          </p>
+          <p className="text-xs text-blue-600 mb-3">
+            Explore and test all studio features without signing in.
+          </p>
+          <button
+            type="button"
+            onClick={() => {
+              loginAsGuest();
+              navigate('/dashboard');
+            }}
+            className="w-full py-2 px-3 text-xs font-bold text-blue-700 bg-white border border-blue-200 rounded-lg hover:bg-blue-50 transition-colors shadow-xs"
+          >
+            Enter Studio as Test Creator →
+          </button>
+        </div>
 
         <p className="text-center text-sm text-gray-500 mt-6">
           Already have an account?{' '}

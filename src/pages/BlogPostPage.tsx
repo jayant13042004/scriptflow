@@ -1,7 +1,8 @@
 import React from 'react';
 import { useParams, Link, Navigate } from 'react-router';
-import { PenLine, ArrowLeft, Clock, Calendar, User, Tag, Sparkles, Share2 } from 'lucide-react';
+import { PenLine, ArrowLeft, Clock, Sparkles, Share2 } from 'lucide-react';
 import { blogPosts } from '../data/blogPosts';
+import { markdownToHtml } from '../lib/markdown';
 import { useSEO } from '../hooks/useSEO';
 
 export default function BlogPostPage() {
@@ -123,47 +124,10 @@ export default function BlogPostPage() {
           </div>
 
           {/* Article Body */}
-          <div className="font-serif text-base sm:text-lg leading-relaxed text-gray-800 space-y-6 max-w-none">
-            {post.content.split('\n\n').map((block, idx) => {
-              const trimmed = block.trim();
-              if (trimmed.startsWith('### ')) {
-                return (
-                  <h3 key={idx} className="text-xl sm:text-2xl font-sans font-bold text-gray-900 mt-8 mb-3">
-                    {trimmed.replace('### ', '')}
-                  </h3>
-                );
-              }
-              if (trimmed.startsWith('#### ')) {
-                return (
-                  <h4 key={idx} className="text-lg font-sans font-bold text-gray-900 mt-6 mb-2">
-                    {trimmed.replace('#### ', '')}
-                  </h4>
-                );
-              }
-              if (trimmed === '---') {
-                return <hr key={idx} className="my-8 border-gray-200" />;
-              }
-              if (trimmed.startsWith('```')) {
-                return (
-                  <pre key={idx} className="p-4 bg-gray-900 text-gray-100 rounded-xl text-xs sm:text-sm font-mono overflow-x-auto my-6">
-                    {trimmed.replace(/```/g, '')}
-                  </pre>
-                );
-              }
-              if (trimmed.startsWith('- ') || trimmed.startsWith('1. ')) {
-                return (
-                  <div key={idx} className="pl-4 border-l-2 border-blue-500 py-1 text-gray-700 my-4 text-sm sm:text-base">
-                    {trimmed}
-                  </div>
-                );
-              }
-              return (
-                <p key={idx} className="leading-relaxed">
-                  {trimmed}
-                </p>
-              );
-            })}
-          </div>
+          <div
+            className="blog-prose"
+            dangerouslySetInnerHTML={{ __html: markdownToHtml(post.content) }}
+          />
 
           {/* Call to Action Card at bottom of article */}
           <div className="mt-16 p-8 bg-gradient-to-br from-gray-900 to-slate-900 text-white rounded-3xl space-y-4">

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, Link } from 'react-router';
-import { Download, Copy, AlertCircle, Clock, FileText, Check, ArrowLeft, Printer } from 'lucide-react';
+import { Download, Copy, AlertCircle, Clock, FileText, Check, ArrowLeft, Printer, PenLine } from 'lucide-react';
 import { supabaseStorage } from '../services/supabase/storageService';
 import { LocalStorageService } from '../services/storage/localStorage';
 import { exportToPdf, exportToTxt } from '../lib/exportImport';
@@ -105,10 +105,10 @@ export default function SharedScriptPage() {
       <header className="sticky top-0 z-10 bg-white/90 backdrop-blur-md border-b border-gray-200 px-4 py-3 sm:px-6 lg:px-8">
         <div className="max-w-4xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3">
-            <Link to="/" className="flex items-center gap-2 text-gray-900 font-bold text-lg">
-              <span className="w-7 h-7 bg-gray-900 text-white rounded-lg flex items-center justify-center text-sm font-bold">
-                S
-              </span>
+            <Link to="/" className="flex items-center gap-2.5 text-gray-900 font-bold text-lg">
+              <div className="w-8 h-8 bg-gray-900 rounded-lg flex items-center justify-center shadow-xs">
+                <PenLine className="w-4 h-4 text-white" />
+              </div>
               <span>ScriptFlow</span>
             </Link>
           </div>

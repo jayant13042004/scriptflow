@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link } from 'react-router';
-import { PenLine, Sparkles, BookOpen, Clock, Tag, ArrowRight } from 'lucide-react';
+import { PenLine, BookOpen, Clock, ArrowRight } from 'lucide-react';
 import { blogPosts } from '../data/blogPosts';
 import { useSEO } from '../hooks/useSEO';
 
@@ -23,7 +23,7 @@ export default function BlogPage() {
     }
   });
   const [selectedCategory, setSelectedCategory] = useState<string>('All');
-  const categories = ['All', 'YouTube Strategy', 'Retention & Growth', 'AI & Workflow'];
+  const categories = ['All', 'YouTube Strategy', 'Retention & Growth', 'Scriptwriting', 'AI & Workflow'];
 
   const filteredPosts = selectedCategory === 'All'
     ? blogPosts
